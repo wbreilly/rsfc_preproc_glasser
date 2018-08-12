@@ -69,7 +69,8 @@ if runflag
     % First re-organize files into cell array
     b.allfiles = {};
     for i = 1:length(b.runs)
-        b.allfiles{i} = b.rundir(i).sfiles; 
+        % if you slicetime change back to s
+        b.allfiles{i} = b.rundir(i).files; 
     end
     
     % realign

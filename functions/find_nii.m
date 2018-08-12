@@ -57,7 +57,7 @@ for irun = 1:length(b.runs)
 end
 
 %find mprage
-ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
+ragedir   = fullfile(b.dataDir,'002_mprage_sag_NS_g3');
 ragefiles = spm_select('FPListRec', ragedir, ['^s.*' '.*.nii']);
 
 if size(ragefiles, 1) == 1

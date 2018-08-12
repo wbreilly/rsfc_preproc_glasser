@@ -13,7 +13,7 @@
 % SPM). 'DCM' or 'NII'. Note: this QA routine is NOT compatible with
 % .img/.hdr. Please convert .img/.hdr to .nii prior to running routine.
 
-fileType    = 'NII';
+fileType    = 'DCM';
 
 %-- Directory Information
 % Paths to relevant directories.
@@ -21,8 +21,8 @@ fileType    = 'NII';
 % scriptdir = path to directory housing this script (and auxiliary scripts)
 % QAdir     = Name of output QA directory
 
-dataDir     = '/home/wbreilly/sms_scan_crick/cluster_preproc_native_8_6_18/';
-scriptdir   = '/home/wbreilly/parallel_sms_scan_batch_preproc'; % fileparts(mfilename('fullpath'));
+dataDir     = '/Users/wbr/walter/fmri/rsfc_glasser_halledata';
+scriptdir   = '/Users/wbr/walter/fmri/rsfc_preproc_glasser'; %  % fileparts(mfilename('fullpath'));
 
 % add spm to path
 % this version hasn't been compiled yet
@@ -47,8 +47,11 @@ addpath /group/dml/apps/spm12
 %
 %  See BIDS format
 
-subjects    = {'s001' 's002' 's003' 's004' 's007' 's008' 's009' 's010' 's011' 's015' 's016' 's018' 's019'  's020' 's022' 's023' 's024' 's025' 's027' 's028' 's029' 's030' 's032' 's033' 's034' 's035' 's036' 's037' 's038' 's039' 's040'}; %
-runs        = {'Rifa_1' 'Rifa_2' 'Rifa_3' 'Rifa_4' 'Rifa_5' 'Rifa_6' 'Rifa_7' 'Rifa_8' 'Rifa_9'};  
+subjects    = {'s202'	's203'	's212'	's217'	's223'	's228'	's233'	's238' 's244'	's249'  's207'	's208' ...	
+               's213'	's218'	's224'	's229'	's234'  's240'	's245'	's250' 's204'	's209'	's214'	's219' ...	
+               's225'	's230'	's235'	's241'	's246'  's205'	's210'	's215'	's220'	's226'	's231'	's236' ...	
+               's242'	's247'  's206'	's211'	's216'	's221'	's227'	's232'	's237'	's243'	's248'};
+runs        = {'005_bold_rest_5minX5' '006_bold_rest_5minX5' '007_bold_rest_5minX5' '008_bold_rest_5minX5' '009_bold_rest_5minX5'};  
 
 %-- Auto-accept
 % Do you want to run all the way through without asking for user input?
@@ -56,9 +59,13 @@ runs        = {'Rifa_1' 'Rifa_2' 'Rifa_3' 'Rifa_4' 'Rifa_5' 'Rifa_6' 'Rifa_7' 'R
 % if 1: skips realignment and ArtRepair if already run, overwrites output files
 auto_accept = 1;
 
-% coreg flag. if 0 don't coregister 
+%% function flags. if 0 don't do
+origin_flag = 0;
+slice_flag = 0; % when this is set to 0 files are gotten from .files not .sfiles. Need to change file paths back if 1
+realign_flag = 1;
 coreg_flag = 1;
-
+smooth_flag = 0;
+%%
 
 %====================================================================================
 %			Routine (DO NOT EDIT BELOW THIS BOX!!)
@@ -89,7 +96,7 @@ fprintf('Running preproc script')
 % control how many workers by setting ntasks in your sbatch script
 
 pc = parcluster('big_mem'); % or 'single_nose'
-poolobj = parpool(pc, 30); % number of subjects/cores. Don't forget to request correct number in sbatch!
+poolobj = parpool(pc, 47); % number of subjects/cores. Don't forget to request correct number in sbatch!
 
 % poolobj = parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE')));
 
@@ -131,23 +138,29 @@ parfor i = 1:length(subjects)
         error('Specify a valid fileType (''DCM'' or ''NII'')');
     end
     
-%     set origin in mprage to AC
-%     fprintf('Set origin to AC!')
-%     [b] = set_origin(b);
-%     fprintf('------------------------------------------------------------\n')
-%     fprintf('\n')     
+%     Set origin in mprage to AC
+    if origin_flag
+        fprintf('Set origin to AC!')
+        [b] = set_origin(b);
+        fprintf('------------------------------------------------------------\n')
+        fprintf('\n')     
+    end
 
-     % run slice time correction
-    fprintf('--Running slicetime correction--\n')
-    [b] = slicetime_correct(b);
-    fprintf('------------------------------------------------------------\n')
-    fprintf('\n')
-
+    % run slice time correction
+    if slice_flag
+        fprintf('--Running slicetime correction--\n')
+        [b] = slicetime_correct(b);
+        fprintf('------------------------------------------------------------\n')
+        fprintf('\n')
+    end
+   
     % Run realignment
-    fprintf('--Realigning and reslicing images using spm_realign and spm_reslice--\n')
-    [b] = batch_spm_realign(b);
-    fprintf('------------------------------------------------------------\n')
-    fprintf('\n')
+    if realign_flag
+        fprintf('--Realigning and reslicing images using spm_realign and spm_reslice--\n')
+        [b] = batch_spm_realign(b);
+        fprintf('------------------------------------------------------------\n')
+        fprintf('\n')
+    end
     
 %     Run coregistration (estimate)
     if coreg_flag
@@ -161,7 +174,7 @@ parfor i = 1:length(subjects)
         fprintf('\n')
     end
     
-%     Run normalization estimate
+% %     Run normalization estimate
 %     fprintf('--Normalize estimating--\n')
 %     [b] = normalize_estimate(b);
 %     fprintf('------------------------------------------------------------\n')
@@ -173,15 +186,19 @@ parfor i = 1:length(subjects)
 %     fprintf('------------------------------------------------------------\n')
 %     fprintf('\n')
     
-    % Run smooth
-    fprintf('--Smoothing--\n')
-    [b] = smooth_wbr(b);
-    fprintf('------------------------------------------------------------\n')
-    fprintf('\n')
+% %     Run smooth
+    if smooth_flag
+        fprintf('--Smoothing--\n')
+        [b] = smooth_wbr(b);
+        fprintf('------------------------------------------------------------\n')
+        fprintf('\n')
+    end
+    
+    diary off
     
 end % i (subjects)
 
 fprintf('Done preproc script\n')
-diary off
+
 delete(gcp('nocreate'))
 exit

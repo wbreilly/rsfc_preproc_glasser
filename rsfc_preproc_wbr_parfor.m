@@ -40,11 +40,11 @@ scriptdir   = '/Users/wbr/walter/fmri/rsfc_preproc_glasser'; % fileparts(mfilena
 %
 %  See BIDS format
 
-subjects    = {'s202'	's207'	's212'	's217'	's223'	's228'	's233'	's238' 's244'	's249'  's203'	's208' ...	
+subjects    = {'s202'	's203'	's212'	's217'	's223'	's228'	's233'	's238' 's244'	's249'  's207'	's208' ...	
                's213'	's218'	's224'	's229'	's234'  's240'	's245'	's250' 's204'	's209'	's214'	's219' ...	
                's225'	's230'	's235'	's241'	's246'  's205'	's210'	's215'	's220'	's226'	's231'	's236' ...	
                's242'	's247'  's206'	's211'	's216'	's221'	's227'	's232'	's237'	's243'	's248'};
-runs        = {'Rifa_1' 'Rifa_2' 'Rifa_3' 'Rifa_4' 'Rifa_5' 'Rifa_6' 'Rifa_7' 'Rifa_8' 'Rifa_9'};  
+runs        = {'005_bold_rest_5minX5' '006_bold_rest_5minX5' '007_bold_rest_5minX5' '008_bold_rest_5minX5' '009_bold_rest_5minX5'};  
 
 %-- Auto-accept
 % Do you want to run all the way through without asking for user input?
@@ -53,16 +53,10 @@ runs        = {'Rifa_1' 'Rifa_2' 'Rifa_3' 'Rifa_4' 'Rifa_5' 'Rifa_6' 'Rifa_7' 'R
 auto_accept = 0;
 
 %% function flags. if 0 don't do
-
-% convert EPIs
-convert_funcs = 0;
-%convert MPRAGE
-convert_rage = 1;
-
-origin_flag = 1;
-slice_flag = 0;
-realign_flag = 0;
-coreg_flag = 0;
+origin_flag = 0;
+slice_flag = 0; % when this is set to 0 files are gotten from .files not .sfiles. Need to change file paths back if 1
+realign_flag = 1;
+coreg_flag = 1;
 smooth_flag = 0;
 %%
 
@@ -101,7 +95,7 @@ fprintf('Running preproc script')
 %%
     
     %--Loop over subjects
-for i = length(subjects)
+for i = 1 %length(subjects)
     
     % Define variables for individual subjects - General
     b.curSubj   = subjects{i};
@@ -116,8 +110,6 @@ for i = length(subjects)
     b.scriptdir   = scriptdir;
     b.auto_accept = auto_accept;
     b.messages    = sprintf('Messages for subject %s:\n', subjects{i});
-    
-    % Check whether QA has already been run for a subject
     
     % Initialize diary for saving output
     diaryname = fullfile(b.dataDir, 'rsfc_halle_preproc.txt');

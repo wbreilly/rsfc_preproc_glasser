@@ -33,6 +33,15 @@ function [b] = convert_dicom(b)
 %
 %
 % See also: find_nii, spm_dicom_headers, spm_dicom_convert
+
+% convert EPIs
+convert_funcs = 1;
+%convert MPRAGE
+convert_rage = 0;
+% find rage here. For when I want to convert funcs but not rage
+find_rage = 1;
+
+
 if convert_funcs
     for irun = 1:length(b.runs)
 
@@ -80,7 +89,7 @@ end
 
 % Check whether there are already nifti files
 if convert_rage
-    ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
+    ragedir   = fullfile(b.dataDir,'002_mprage_sag_NS_g3');
     ragefiles = spm_select('FPList', ragedir, '.*\.nii');
     if size(ragefiles, 1) > 0
         fprintf('There are already %0.0f nii files in mprage folder.\n', size(ragefiles,1));
@@ -93,7 +102,7 @@ if convert_rage
     end
 
     % Convert dicom images
-    ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
+    ragedir   = fullfile(b.dataDir,'002_mprage_sag_NS_g3');
     dcmfiles = spm_select('FPList', ragedir, '.*dcm');
     dcmhdr    = spm_dicom_headers(dcmfiles);
     cd(ragedir)
@@ -103,6 +112,18 @@ if convert_rage
     cd(b.scriptdir);
 end
 
+% for this special case 
+if find_rage
+    ragedir   = fullfile(b.dataDir,'002_mprage_sag_NS_g3');
+    ragefiles = spm_select('FPListRec', ragedir, ['^s.*' '.*.nii']);
+
+    if size(ragefiles, 1) == 1
+        fprintf('Found 1 mprage NII')
+        b.mprage = ragefiles;
+    else
+        error('Could not find mprage NII')
+    end
+end
 
 
 end
