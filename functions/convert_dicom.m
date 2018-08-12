@@ -33,118 +33,76 @@ function [b] = convert_dicom(b)
 %
 %
 % See also: find_nii, spm_dicom_headers, spm_dicom_convert
+if convert_funcs
+    for irun = 1:length(b.runs)
 
-for irun = 1:length(b.runs)
-    
-    rundir   = fullfile(b.dataDir, b.runs{irun});
-    dcmfiles = spm_select('FPList', rundir, '.*dcm');
-    fprintf('In directory %s:\n%0.0f dcm files found...\n', rundir, size(dcmfiles,1));
-    
-%     Check whether there are already nifti files
-    niifiles = spm_select('FPList', rundir, '.*\.nii');
-    if size(niifiles, 1) > 0
-        fprintf('There are already %0.0f nii files in this folder.\n', size(niifiles,1));
-        response = input('Are you sure you want to use dicom files? y/n \n', 's');
-        if strcmp(response,'y') == 1
-            disp('Continuing running dicom conversion')
-        else
-            error('Change fileType to ''NII''')
+        rundir   = fullfile(b.dataDir, b.runs{irun});
+        dcmfiles = spm_select('FPList', rundir, '.*dcm');
+        fprintf('In directory %s:\n%0.0f dcm files found...\n', rundir, size(dcmfiles,1));
+
+    %     Check whether there are already nifti files
+        niifiles = spm_select('FPList', rundir, '.*\.nii');
+        if size(niifiles, 1) > 0
+            fprintf('There are already %0.0f nii files in this folder.\n', size(niifiles,1));
+            response = input('Are you sure you want to use dicom files? y/n \n', 's');
+            if strcmp(response,'y') == 1
+                disp('Continuing running dicom conversion')
+            else
+                error('Change fileType to ''NII''')
+            end
         end
-    end
-    
-%     Convert dicom images
-    dcmhdr    = spm_dicom_headers(dcmfiles);
-    cd(rundir);
-    dcmoutput = spm_dicom_convert(dcmhdr, 'all', 'flat', 'nii');
-    
-    b.rundir(irun).files = cell2mat(dcmoutput.files);
-    fprintf('%0.0f files converted to nii.\n', size(b.rundir(irun).files, 1));
-    
-    
-    %%%%% added by wbr to adopt naming convention
-    matlabbatch{1}.spm.util.cat.vols = cellstr(spm_select('FPListRec', rundir, '^*.nii'));
-    matlabbatch{1}.spm.util.cat.name = sprintf('%s.%s.bold.nii',b.curSubj, b.runs{irun});
-    matlabbatch{1}.spm.util.cat.dtype = 4;
-    spm('defaults','fmri');
-    spm_jobman('initcfg');
-    spm_jobman('run',matlabbatch);
-    
-    delete f*.nii
-    b.rundir(irun).files = spm_select('ExtFPListRec', b.dataDir, ['^.*'  b.runs{irun} '.*bold\.nii']);
-    
-    cd(b.scriptdir);
-end
 
+    %     Convert dicom images
+        dcmhdr    = spm_dicom_headers(dcmfiles);
+        cd(rundir);
+        dcmoutput = spm_dicom_convert(dcmhdr, 'all', 'flat', 'nii');
+
+        b.rundir(irun).files = cell2mat(dcmoutput.files);
+        fprintf('%0.0f files converted to nii.\n', size(b.rundir(irun).files, 1));
+
+
+        %%%%% added by wbr to adopt naming convention
+        matlabbatch{1}.spm.util.cat.vols = cellstr(spm_select('FPListRec', rundir, '^*.nii'));
+        matlabbatch{1}.spm.util.cat.name = sprintf('%s.%s.bold.nii',b.curSubj, b.runs{irun});
+        matlabbatch{1}.spm.util.cat.dtype = 4;
+        spm('defaults','fmri');
+        spm_jobman('initcfg');
+        spm_jobman('run',matlabbatch);
+
+        delete f*.nii
+        b.rundir(irun).files = spm_select('ExtFPListRec', b.dataDir, ['^.*'  b.runs{irun} '.*bold\.nii']);
+
+        cd(b.scriptdir);
+    end
+end
 
 %% need to convert mprage too
 
 % Check whether there are already nifti files
-ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
-ragefiles = spm_select('FPList', ragedir, '.*\.nii');
-if size(ragefiles, 1) > 0
-    fprintf('There are already %0.0f nii files in mprage folder.\n', size(ragefiles,1));
-    response = input('Are you sure you want to use dicom files? y/n \n', 's');
-    if strcmp(response,'y') == 1
-        disp('Continuing running dicom conversion')
-    else
-        error('Found NII mprage Change fileType to ''NII''')
+if convert_rage
+    ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
+    ragefiles = spm_select('FPList', ragedir, '.*\.nii');
+    if size(ragefiles, 1) > 0
+        fprintf('There are already %0.0f nii files in mprage folder.\n', size(ragefiles,1));
+        response = input('Are you sure you want to use dicom files? y/n \n', 's');
+        if strcmp(response,'y') == 1
+            disp('Continuing running dicom conversion')
+        else
+            error('Found NII mprage Change fileType to ''NII''')
+        end
     end
+
+    % Convert dicom images
+    ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
+    dcmfiles = spm_select('FPList', ragedir, '.*dcm');
+    dcmhdr    = spm_dicom_headers(dcmfiles);
+    cd(ragedir)
+    dcmoutput = spm_dicom_convert(dcmhdr, 'all', 'flat', 'nii');
+    b.mprage = cell2mat(dcmoutput.files);
+    fprintf('%0.0f files converted to nii (mprage).\n', size(b.mprage, 1));
+    cd(b.scriptdir);
 end
 
-% Convert dicom images
-ragedir   = fullfile(b.dataDir,'mprage_sag_NS_g3');
-dcmfiles = spm_select('FPList', ragedir, '.*dcm');
-dcmhdr    = spm_dicom_headers(dcmfiles);
-cd(ragedir)
-dcmoutput = spm_dicom_convert(dcmhdr, 'all', 'flat', 'nii');
-b.mprage = cell2mat(dcmoutput.files);
-fprintf('%0.0f files converted to nii (mprage).\n', size(b.mprage, 1));
-cd(b.scriptdir);
 
-%% need to convert field maps too
-
-% Check whether there are already nifti files
-fmapdir   = fullfile(b.dataDir,'gre_field_mapping');
-fmaps = spm_select('FPList', fmapdir, '.*\.nii');
-if size(fmaps, 1) > 0
-    fprintf('There are already %0.0f nii files in fmap folder.\n', size(fmaps,1));
-    response = input('Are you sure you want to use dicom files? y/n \n', 's');
-    if strcmp(response,'y') == 1
-        disp('Continuing running dicom conversion')
-    else
-        error('Found NII fmap Change fileType to ''NII''')
-    end
-end
-
-% Convert dicom images
-dcmfiles = spm_select('FPList', fmapdir, '.*dcm');
-dcmhdr    = spm_dicom_headers(dcmfiles);
-cd(fmapdir)
-dcmoutput = spm_dicom_convert(dcmhdr, 'all', 'flat', 'nii');
-b.fmap = cell2mat(dcmoutput.files);
-fprintf('%0.0f files converted to nii (fmap).\n', size(b.fmap, 1));
-cd(b.scriptdir);
-
-% the other one
-fmapdir   = fullfile(b.dataDir,'gre_field_mapping2');
-fmaps = spm_select('FPList', fmapdir, '.*\.nii');
-if size(fmaps, 1) > 0
-    fprintf('There are already %0.0f nii files in fmap folder.\n', size(fmaps,1));
-    response = input('Are you sure you want to use dicom files? y/n \n', 's');
-    if strcmp(response,'y') == 1
-        disp('Continuing running dicom conversion')
-    else
-        error('Found NII fmap Change fileType to ''NII''')
-    end
-end
-
-% Convert dicom images
-dcmfiles = spm_select('FPList', fmapdir, '.*dcm');
-dcmhdr    = spm_dicom_headers(dcmfiles);
-cd(fmapdir)
-dcmoutput = spm_dicom_convert(dcmhdr, 'all', 'flat', 'nii');
-b.fmap = cell2mat(dcmoutput.files);
-fprintf('%0.0f files converted to nii (fmap2).\n', size(b.fmap, 1));
-cd(b.scriptdir);
 
 end
