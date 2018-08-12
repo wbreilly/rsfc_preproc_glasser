@@ -21,8 +21,8 @@ fileType    = 'DCM';
 % scriptdir = path to directory housing this script (and auxiliary scripts)
 % QAdir     = Name of output QA directory
 
-dataDir     = '/Users/wbr/walter/fmri/rsfc_glasser_halledata';
-scriptdir   = '/Users/wbr/walter/fmri/rsfc_preproc_glasser'; %  % fileparts(mfilename('fullpath'));
+dataDir     = '/home/wbreilly/halle_data_crick';
+scriptdir   = '/home/wbreilly/rsfc_preproc_glasser'; %  % fileparts(mfilename('fullpath'));
 
 % add spm to path
 % this version hasn't been compiled yet

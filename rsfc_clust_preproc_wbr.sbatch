@@ -15,4 +15,4 @@ date
 hostname
 module load matlab/R2016a # load matlab module 
 
-matlab -nodisplay < rsfc_cluster_parallel_preproc_wbr.m # run matlab script # added srun
+matlab -nodisplay < rsfc_cluster_parallel_preproc_wbr.m # run matlab script 
